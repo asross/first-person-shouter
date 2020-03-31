@@ -1,6 +1,5 @@
 import * as THREE from './three.module.js';
 import { OrbitControls } from './OrbitControls.js';
-import { PositionalAudioHelper } from './PositionalAudioHelper.js';
 import { GLTFLoader } from './GLTFLoader.js';
 
 var scene, camera, renderer, video;
