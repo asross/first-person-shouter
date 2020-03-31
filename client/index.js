@@ -54,16 +54,29 @@ function init() {
 
   video = document.getElementById( 'video' );
   var texture = new THREE.VideoTexture( video );
-  var geometry = new THREE.PlaneBufferGeometry( 16, 9 );
-  geometry.scale( 0.5, 0.5, 0.5 );
+
+
+  var width = 0.8;
+  var height = 0.45;
+
+  var geometry = new THREE.PlaneBufferGeometry( width, height );
+  //geometry.scale( 0.05, 0.05, 0.05 );
   var material = new THREE.MeshBasicMaterial( { map: texture } );
   var mesh = new THREE.Mesh( geometry, material );
   mesh.position.set(0, 0.2, 0);
+
+  var geometry2 = new THREE.BoxGeometry( width, height, 0.05 );
+  var material2 = new THREE.MeshBasicMaterial( {color: 0x00aaaa} );
+  var cube = new THREE.Mesh( geometry2, material2 );
+  cube.position.set(0, 0.2, -0.04);
+  scene.add( cube );
   //mesh.lookAt( camera.position );
+  //
+  //setInterval(function() {
+    //mesh.position.set(Math.random(), Math.random(), Math.random());
+  //}, 1000);
 
-  var constraints = { video: { width: 1280, height: 720, facingMode: 'user' } };
-
-  navigator.mediaDevices.getUserMedia( constraints ).then( function ( stream ) {
+  navigator.mediaDevices.getUserMedia( { video: true, audio: false } ).then( function ( stream ) {
 
     // apply the stream to the video element used in the texture
 
@@ -86,20 +99,17 @@ function init() {
     positionalAudio.setDirectionalCone( 180, 230, 0.1 );
   });
 
-  var helper = new PositionalAudioHelper( positionalAudio, 0.1 );
-  positionalAudio.add( helper );
-
   mesh.add(positionalAudio);
   scene.add( mesh );
   animate();
   // sound is damped behind this wall
 
-  var wallGeometry = new THREE.BoxBufferGeometry( 2, 1, 0.1 );
-  var wallMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5 } );
+  //var wallGeometry = new THREE.BoxBufferGeometry( 2, 1, 0.1 );
+  //var wallMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, transparent: true, opacity: 0.5 } );
 
-  var wall = new THREE.Mesh( wallGeometry, wallMaterial );
-  wall.position.set( 0, 0.5, - 0.5 );
-  scene.add( wall );
+  //var wall = new THREE.Mesh( wallGeometry, wallMaterial );
+  //wall.position.set( 0, 0.5, - 0.5 );
+  //scene.add( wall );
 
 
   //
