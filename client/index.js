@@ -128,6 +128,7 @@ function init() {
   controls.minDistance = 0.5;
   controls.maxDistance = 10;
   controls.maxPolarAngle = 0.5 * Math.PI;
+  controls.keyPanSpeed = 30;
 
   //
 
