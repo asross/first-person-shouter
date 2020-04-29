@@ -1,6 +1,15 @@
 import { JanusWrapper } from './janus_wrapper.js';
 import { SceneWrapper } from './scene_wrapper.js';
 
+/*
+ * IDEAS:
+ * - FPS controls with jumpng
+ * - hover over a user in the distance to zip to them
+ * - right click, invite to room
+ * - also set up tent
+ * - have a "rear view mirror"
+ */
+
 document.getElementById('start').onclick = () => {
   window.scene = new SceneWrapper("container");
 
@@ -11,8 +20,8 @@ document.getElementById('start').onclick = () => {
     scene.addStream(stream, 'me', { position, rotation });
 
     setInterval(() => {
-      position.x = position.x + 0.01;
-      position.y = position.y - 0.01;
+      position.x = position.x + 0.05;
+      position.z = position.z - 0.05;
       scene.setLocation('me', position, rotation);
     }, 100);
   });
