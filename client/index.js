@@ -9,32 +9,38 @@ import { SceneWrapper } from './scene_wrapper.js';
  * - also set up tent
  * - have a "rear view mirror"
  */
+const serverInput = document.getElementById('server');
+const displayInput = document.getElementById('display');
+window.si = serverInput;
+window.di = displayInput;
 
 document.getElementById('start').onclick = () => {
   window.scene = new SceneWrapper("container");
 
-  // DEBUGGING
-  navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-    let position = JSON.parse(JSON.stringify(scene.camera.position));
-    let rotation = JSON.parse(JSON.stringify(scene.camera.rotation));
-    scene.addStream(stream, 'me', { position, rotation });
+  const server = serverInput.value || 'http://localhost:8088/janus';
+  const display = displayInput.value || 'Andrew';
 
-    setInterval(() => {
-      position.x = position.x + 0.05;
-      position.z = position.z - 0.05;
-      scene.setLocation('me', position, rotation);
-    }, 100);
-  });
-
-  window.janus = new JanusWrapper("http://localhost:8088/janus", 1, {
+  window.janus = new JanusWrapper(server, 1234, display, {
     onRemoteConnection: (id, stream) => {
-      scene.addStream(stream, id, { x: 0, y: 0.2, theta: 0 });
+      console.log(`onRemoteConnection ${id}`);
+      scene.addStream(stream, id);
     },
     onRemoteData: (id, data) => {
-      scene.setPosition(id, data);
+      console.log(`onRemoteData ${id}`);
+      const { position, rotation } = data;
+      console.log(position);
+      console.log(rotation);
+      scene.setLocation(id, position, rotation);
     },
     onRemoteDisconnect: (id) => {
+      console.log(`onRemoteDisconnect ${id}`);
       scene.removeStream(id);
     }
   });
+
+  setInterval(() => {
+    const position = JSON.parse(JSON.stringify(scene.camera.position));
+    const rotation = JSON.parse(JSON.stringify(scene.camera.rotation));
+    janus.sendLocalData({ position, rotation });
+  }, 250);
 };

@@ -5,11 +5,25 @@
     <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.module.js" integrity="sha256-JZ5o5Xz9wLA9cHaTan9Mri1nv349Sfu10LOi7bN2Npw=" crossorigin="anonymous" type="module"></script>-->
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="janus.js"></script>
+
+    <style>
+      #my-video {
+        max-width: 200px;
+      }
+      #server, #display {
+        width: 200px;
+        font-size: large;
+      }
+    </style>
   </head>
 
   <body>
+    <video id='my-video' autoplay playsinline muted="muted"></video>
+
     <div id='video-container' style='display:none'>
     </div>
+    <input id='server' type='text' value='http://localhost:8088/janus'>
+    <input id='display' type='text' value='Andrew'>
     <button id='start'>Start</button>
     <div id="container"></div>
   </body>

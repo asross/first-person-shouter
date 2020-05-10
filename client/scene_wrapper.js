@@ -174,12 +174,19 @@ export class SceneWrapper {
 
 
   setLocation(id, pos, rot) {
-    const videoMesh = this.streams[id].mesh;
-    videoMesh.position.set(pos.x, pos.y, pos.z);
-    //videoMesh.rotation.set(data.rotation);
+    if (this.streams[id]) {
+      const videoMesh = this.streams[id].mesh;
+      videoMesh.position.set(pos.x, pos.y, pos.z);
+      videoMesh.rotation.set(rot._x, rot._y, rot._z, rot._order);
+    }
   }
 
-  addStream(stream, id, data) {
+  addStream(stream, id) {
+    if (this.streams[id]) {
+      return;
+    }
+    console.log(`addStream ${id}`);
+    console.log(stream);
     this.streams[id] = { stream };
 
     const wrapper = document.createElement('div');
@@ -220,6 +227,8 @@ export class SceneWrapper {
     this.streams[id].audio = positionalAudio;
 
     this.scene.add(videoMesh);
+    
+    console.log('added stream!');
   }
 
   removeStream(id) {
