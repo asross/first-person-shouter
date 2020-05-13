@@ -31,7 +31,7 @@ export class JanusWrapper {
       ondata: (data) => {
         console.log(`remote ${id} ondata`);
         if (that.events.onRemoteData) {
-          that.events.onRemoteData(id, JSON.parse(data));
+          that.events.onRemoteData(user, JSON.parse(data));
         }
       },
       onmessage: (msg, jsep) => {
@@ -65,11 +65,14 @@ export class JanusWrapper {
       onremotestream: (stream) => {
         console.log(`remote ${id} onremotestream`);
         console.log(stream);
-        that.users[id].stream = stream;
-        if (that.events.onRemoteConnection) {
-          that.events.onRemoteConnection(id, stream);
+        if (!that.users[id].stream) {
+          that.users[id].stream = stream;
+          if (that.events.onRemoteConnection) {
+            that.events.onRemoteConnection(user, stream);
+          }
         }
       },
+
       oncleanup: () => {
         console.log(`remote ${id} oncleanup`);
         that.removeUser(id);
@@ -83,7 +86,7 @@ export class JanusWrapper {
       this.sfu.hangup();
     } else if (this.users[id]) {
       if (this.events.onRemoteDisconnect) {
-        this.events.onRemoteDisconnect(id);
+        this.events.onRemoteDisconnect(this.users[id]);
       }
       if (this.users[id].sfu) {
         this.users[id].sfu.detach();
@@ -169,20 +172,15 @@ export class JanusWrapper {
                   that.sfu.handleRemoteJsep({ jsep });
                 }
               },
-              ondata: () => { console.log("my janus ondata"); },
               onlocalstream: (stream) => {
-                console.log("my janus onlocalstream");
-                console.log(stream);
                 const video = document.getElementById('my-video');
                 Janus.attachMediaStream(video, stream);
                 video.muted = "muted";
               },
+              ondata: () => { console.log("my janus ondata"); },
               ondataopen: () => { console.log("my janus ondataopen"); },
               onremotestream: () => { console.log("my janus onremotestream"); },
-              oncleanup: () => {
-                console.log("my janus oncleanup");
-                console.log(arguments);
-              },
+              oncleanup: () => { console.log("my janus oncleanup"); },
               detached: () => { console.log("my janus detached"); }
             });
           },

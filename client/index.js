@@ -1,5 +1,6 @@
 import { JanusWrapper } from './janus_wrapper.js';
 import { SceneWrapper } from './scene_wrapper.js';
+import * as THREE from './three.module.js';
 
 /*
  * IDEAS:
@@ -9,38 +10,38 @@ import { SceneWrapper } from './scene_wrapper.js';
  * - also set up tent
  * - have a "rear view mirror"
  */
+const roomidInput = document.getElementById('roomid');
 const serverInput = document.getElementById('server');
 const displayInput = document.getElementById('display');
-window.si = serverInput;
-window.di = displayInput;
 
 document.getElementById('start').onclick = () => {
   window.scene = new SceneWrapper("container");
+  document.body.classList.add('started-threejs');
 
   const server = serverInput.value || 'http://localhost:8088/janus';
   const display = displayInput.value || 'Andrew';
+  const roomid = parseInt(roomidInput.value || 1234);
 
-  window.janus = new JanusWrapper(server, 1234, display, {
-    onRemoteConnection: (id, stream) => {
-      console.log(`onRemoteConnection ${id}`);
-      scene.addStream(stream, id);
+  window.janus = new JanusWrapper(server, roomid, display, {
+    onRemoteConnection: (user, stream) => {
+      scene.addStream(stream, user.id, user.display);
     },
-    onRemoteData: (id, data) => {
-      console.log(`onRemoteData ${id}`);
+    onRemoteData: (user, data) => {
       const { position, rotation } = data;
-      console.log(position);
-      console.log(rotation);
-      scene.setLocation(id, position, rotation);
+      scene.setLocation(user.id, position, rotation);
     },
-    onRemoteDisconnect: (id) => {
-      console.log(`onRemoteDisconnect ${id}`);
-      scene.removeStream(id);
+    onRemoteDisconnect: (user) => {
+      scene.removeStream(user.id);
     }
   });
 
   setInterval(() => {
-    const position = JSON.parse(JSON.stringify(scene.camera.position));
-    const rotation = JSON.parse(JSON.stringify(scene.camera.rotation));
+    const pos = new THREE.Vector3();
+    scene.controls.getObject().getWorldPosition(pos);
+    const rot = new THREE.Quaternion();
+    scene.controls.getObject().getWorldQuaternion(rot);
+    const position = JSON.parse(JSON.stringify(pos));
+    const rotation = JSON.parse(JSON.stringify(rot));
     janus.sendLocalData({ position, rotation });
   }, 250);
 };

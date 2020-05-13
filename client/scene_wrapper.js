@@ -112,7 +112,23 @@ export class SceneWrapper {
 
     this.controls = new PointerLockControls(this.camera, this.renderer.domElement);
     this.scene.add(this.controls.getObject());
-    this.controls.lock();
+    //this.controls.lock();
+
+		this.blocker = document.getElementById( 'blocker' );
+		this.instructions = document.getElementById( 'instructions' );
+		this.instructions.addEventListener('click', () => {
+      that.controls.lock();
+    }, false);
+		this.controls.addEventListener('lock', function () {
+      that.instructions.style.display = 'none';
+      that.blocker.style.display = 'none';
+    });
+		this.controls.addEventListener('unlock', function () {
+      that.blocker.style.display = 'block';
+      that.instructions.style.display = '';
+    });
+    this.blocker.style.display = 'block';
+    this.instructions.style.display = '';
 
 		this.raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0,-1,0), 0, 10);
 
@@ -177,11 +193,12 @@ export class SceneWrapper {
     if (this.streams[id]) {
       const videoMesh = this.streams[id].mesh;
       videoMesh.position.set(pos.x, pos.y, pos.z);
-      videoMesh.rotation.set(rot._x, rot._y, rot._z, rot._order);
+      videoMesh.quaternion.set(rot._x, rot._y, rot._z, rot._w);
+
     }
   }
 
-  addStream(stream, id) {
+  addStream(stream, id, displayName) {
     if (this.streams[id]) {
       return;
     }
@@ -205,6 +222,8 @@ export class SceneWrapper {
     const width = 0.8*5;
     const height = 0.45*5;
     const videoGeom = new THREE.PlaneBufferGeometry(width, height);
+    videoGeom.rotateY(Math.PI);
+
     const videoMtrl = new THREE.MeshBasicMaterial({ map: texture });
     const videoMesh = new THREE.Mesh(videoGeom, videoMtrl);
 
@@ -218,10 +237,23 @@ export class SceneWrapper {
     positionalAudio.setDirectionalCone( 180, 230, 0.1 );
     videoMesh.add(positionalAudio);
 
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    context.font = "32pt Arial";
+    context.fillStyle = "white";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillStyle = "black";
+    context.fillText(displayName, canvas.width / 2, canvas.height / 2);
+
+    const backstopTexture = new THREE.Texture(canvas);
+    backstopTexture.needsUpdate = true;
+
     var backstopGeom = new THREE.BoxGeometry(width, height, 0.05);
-    var backstopMtrl = new THREE.MeshBasicMaterial({color: 0x00aaaa});
+    var backstopMtrl = new THREE.MeshBasicMaterial({color: 0x00aaaa, map: backstopTexture });
     var backstopMesh = new THREE.Mesh(backstopGeom, backstopMtrl);
-    backstopMesh.position.z -= 0.05;
+    backstopMesh.position.z += 0.05;
     videoMesh.add(backstopMesh);
 
     this.streams[id].audio = positionalAudio;
