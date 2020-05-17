@@ -96,6 +96,19 @@ export class SceneWrapper {
         }
 
         that.prevTime = time;
+
+        if (that.teleportTarget !== undefined) {
+          const mesh = that.teleportTarget.mesh;
+          console.log(mesh);
+          that.controls.getObject().position.x = mesh.position.x-1;
+          that.controls.getObject().position.y = mesh.position.y;
+          that.controls.getObject().position.z = mesh.position.z-1;
+          that.velocity.x = 0;
+          that.velocity.y = 0;
+          that.velocity.z = 0;
+          that.controls.getObject().lookAt(mesh.position);
+          that.teleportTarget = undefined;
+        }
       }
       if (that.renderer) {
         that.renderer.render(that.scene, that.camera);
@@ -120,15 +133,11 @@ export class SceneWrapper {
       that.controls.lock();
     }, false);
 		this.controls.addEventListener('lock', function () {
-      that.instructions.style.display = 'none';
-      that.blocker.style.display = 'none';
+      that.hideInstructions();
     });
 		this.controls.addEventListener('unlock', function () {
-      that.blocker.style.display = 'block';
-      that.instructions.style.display = '';
+      that.showInstructions();
     });
-    this.blocker.style.display = 'block';
-    this.instructions.style.display = '';
 
 		this.raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0,-1,0), 0, 10);
 
@@ -184,17 +193,37 @@ export class SceneWrapper {
       }
     }
 
+    function onWindowResize() {
+      that.camera.aspect = window.innerWidth / window.innerHeight;
+      that.camera.updateProjectionMatrix();
+      that.renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
+    window.addEventListener( 'resize', onWindowResize, false );
+    
   }
 
+  hideInstructions() {
+    this.instructions.style.display = 'none';
+    this.blocker.style.display = 'none';
+  }
+
+  showInstructions() {
+    this.blocker.style.display = 'block';
+    this.instructions.style.display = '';
+  }
+
+  teleportTo(id) {
+    this.teleportTarget = this.streams[id];
+  }
 
   setLocation(id, pos, rot) {
     if (this.streams[id]) {
       const videoMesh = this.streams[id].mesh;
       videoMesh.position.set(pos.x, pos.y, pos.z);
       videoMesh.quaternion.set(rot._x, rot._y, rot._z, rot._w);
-
     }
   }
 
@@ -268,11 +297,5 @@ export class SceneWrapper {
     if (!s) return;
     this.scene.remove(s.mesh);
     s.videoWrapper.remove();
-  }
-
-  onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize( window.innerWidth, window.innerHeight );
   }
 }

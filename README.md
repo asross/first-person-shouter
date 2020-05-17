@@ -1,25 +1,34 @@
 # First Person Shouter
 
-## Plan + Links
+This is a very silly app for video-chatting in a 3D environment!
 
-### Audio
+## How it works
 
-#### Manual
+It's a mashup of [ThreeJS](https://threejs.org) (for rendering a 3D environment) and [Janus](https://janus.conf.meetecho.com/) (for handling WebRTC communication). Specifically, I worked off the following examples:
+- <https://threejs.org/examples/#webaudio_orientation>
+- <https://threejs.org/examples/#webgl_materials_video_webcam>
+- <https://threejs.org/examples/#misc_controls_pointerlock>
+- <https://github.com/meetecho/janus-gateway/blob/master/html/videoroomtest.js>
 
-<https://blog.twoseven.xyz/chrome-webrtc-remote-volume/>: How to control volume (only works on firefox)
-<https://mdn.github.io/webaudio-examples/stereo-panner-node/>: How to control panning
+## Possible TODOs
 
-```
-ourGap = my.pos - their.pos
-theta = angleBetween(my.orientation, ourGap)
-their.panning = sin(theta)
-their.volume = 1/ourGap.magnitude
-```
+- Finish the basics
+    - Copy invite URLs with encoded PINs
+    - Turn video on and off
+    - Share screen
+- Improve the landscape
+    - Extract parts of ThreeJS scene into map object
+    - Develop multiple maps, select via dropdown
+    - Let people upload their own maps!
+    - Add raycasting / collision logic
+- Audio features
+    - Support rooms within rooms (with semi-permeable sound barrier)
+    - Override the audio system to provide better binaural HRTF
+- Misc.
+    - Add a minimap!
+    - Tweak/add alternate control options (e.g. flying, little cars)
+    - Animated running avatars
 
-#### Probably better
+## License
 
-<https://threejs.org/examples/#webaudio_orientation>: Just get everything for free
-
-### Video
-
-<https://threejs.org/examples/webgl_materials_video_webcam.html>: Yeah...
+[MIT](https://opensource.org/licenses/MIT)

@@ -1,0 +1,68 @@
+#blocker {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+#blocker .status-header {
+  font-size: 36px;
+}
+
+#instructions,
+#status-message {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #ffffff;
+  text-align: center;
+  cursor: pointer;
+}
+
+.heads-up-display {
+  position: fixed;
+  padding: 5px;
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+  border: 1px solid #ccc;
+  background: rgba(255,255,255,0.5);
+}
+
+#my-video {
+  border: 1px solid #ccc;
+  max-width: 150px;
+  display: block;
+}
+
+body .heads-up-display {
+  display: none;
+}
+
+body.started-threejs .heads-up-display {
+  display: block;
+}
+
+body.started-threejs .landing-page {
+  display: none;
+}
+
+#other-users {
+  font-size: small;
+}
+
+#other-users .button.is-small {
+  font-size: .5rem;
+}
+
+#other-users li:first-child {
+  margin-top: 10px;
+}
+
+.heads-up-display .buttons {
+  align-items: stretch;
+  flex-direction: column;
+}

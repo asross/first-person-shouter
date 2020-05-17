@@ -2,103 +2,89 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
-    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.module.js" integrity="sha256-JZ5o5Xz9wLA9cHaTan9Mri1nv349Sfu10LOi7bN2Npw=" crossorigin="anonymous" type="module"></script>-->
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="janus.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.2/css/bulma.min.css">
-
-    <style>
-			#blocker {
-				position: absolute;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(0,0,0,0.5);
-			}
-
-			#instructions {
-				width: 100%;
-				height: 100%;
-				display: -webkit-box;
-				display: -moz-box;
-				display: box;
-				-webkit-box-orient: horizontal;
-				-moz-box-orient: horizontal;
-				box-orient: horizontal;
-				-webkit-box-pack: center;
-				-moz-box-pack: center;
-				box-pack: center;
-				-webkit-box-align: center;
-				-moz-box-align: center;
-				box-align: center;
-				color: #ffffff;
-				text-align: center;
-				cursor: pointer;
-			}
-
-      #my-video {
-        max-width: 150px;
-        border: 1px solid #ccc;
-        position: fixed;
-        top: 5px;
-        right: 5px;
-      }
-
-      body #my-video {
-        display: none;
-      }
-
-      body.started-threejs #my-video {
-        display: block;
-      }
-
-      body.started-threejs #join-header {
-        display: none;
-      }
-    </style>
+    <link rel="stylesheet" href="//cdn.materialdesignicons.com/5.1.45/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="index.css">
   </head>
 
   <body>
-    <video id='my-video' autoplay playsinline muted="muted"></video>
+    <div class='heads-up-display'>
+      <div class='video-wrapper'>
+        <video id='my-video' autoplay playsinline muted="muted"></video>
+        <div class="buttons has-addons">
+          <button class='button is-small' id='mute-toggle'>
+            <span class='icon'>
+              <i class='mdi mdi-microphone'></i>
+            </span>
+            &nbsp;
+            Mute
+          </button>
+        </div>
+      </div>
+      <ul id='other-users'>
+      </ul>
+    </div>
 
-    <section class="section" id='join-header'>
+    <section class="section landing-page">
       <div class="container">
-        <h1 class='title'>First Person Shouter</h1>
-        <div class='field'>
-          <label class='label'>Your name</label>
-          <div class='control'>
-            <input class='input' type='text' id='display' value='Andrew'>
+
+        <div class='columns'>
+          <div class='column'>
           </div>
-        </div>
-        <div class='field'>
-          <label class='label'>Room number</label>
-          <div class='control'>
-            <input class='input' type='text' id='roomid' value='1234'>
+          <div class='column'>
+            <h1 class='title'>First Person Shouter</h1>
+            <div class='field'>
+              <label class='label'>Your name</label>
+              <div class='control'>
+                <input class='input' type='text' id='display' value='Andrew'>
+                <p class='help'>Other people will see this on your back.</p>
+              </div>
+            </div>
+            <div class='field'>
+              <label class='label'>Room number</label>
+              <div class='control'>
+                <input class='input' type='text' id='roomid' value='1234'>
+                <p class='help'>Must be a number, sadly.</p>
+              </div>
+            </div>
+            <div class='field'>
+              <label class='label'>Room password (optional)</label>
+              <div class='control'>
+                <input class='input' type='text' id='roompw' value=''>
+              </div>
+            </div>
+            <div class='field'>
+              <label class='label'>Janus server</label>
+              <div class='control'>
+                <input class='input' type='text' id='server' value='http://localhost:8088/janus'>
+                <p class='help'>We use <a href='https://janus.conf.meetecho.com/' target='_blank'>Janus</a>, an open-source WebRTC server, to set up browser-to-browser media connections!</p>
+              </div>
+            </div>
+            <div class='field'>
+              <div class='control'>
+                <button class='button is-link' id='start'>Start chattin'!</button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class='field'>
-          <label class='label'>Server</label>
-          <div class='control'>
-            <input class='input' type='text' id='server' value='http://localhost:8088/janus'>
-          </div>
-        </div>
-        <div class='field'>
-          <div class='control'>
-            <button class='button' id='start'>Start chattin'!</button>
+          <div class='column'>
           </div>
         </div>
       </div>
     </section>
 
     <div id="blocker" style="display: none">
-			<div id="instructions">
-				<span style="font-size:36px">Click to start</span>
-				<br/><br/>
-				Move: WASD<br/>
-				Jump: SPACE<br/>
+      <div id="status-message" style="display: none"></div>
+      <div id="instructions">
+        <span class='status-header'>Click to start</span>
+        <br/><br/>
+        Move: WASD<br/>
+        Jump: SPACE<br/>
         Look: MOUSE<br/>
         Pause: ESC
-			</div>
-		</div>
+      </div>
+    </div>
 
     <div id="container"></div>
   </body>
