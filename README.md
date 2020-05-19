@@ -2,6 +2,8 @@
 
 This is a very silly app for video-chatting in a 3D environment!
 
+![demo](demo.gif)
+
 ## How it works
 
 It's a mashup of [ThreeJS](https://threejs.org) (for rendering a 3D environment) and [Janus](https://janus.conf.meetecho.com/) (for handling WebRTC communication). Specifically, I worked off the following examples:
