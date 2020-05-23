@@ -41,7 +41,7 @@ document.getElementById('start').onclick = () => {
     server: serverInput.value || 'http://localhost:8088/janus',
     roomid: parseInt(roomidInput.value || 1234),
     roompw: roompwInput.value,
-    username: displayInput.value,
+    username: displayInput.value || `(no name)`,
     onStatus: displayStatus,
     onLocalConnection: (stream) => {
       const video = document.getElementById('my-video');
