@@ -53,18 +53,21 @@ function sendMedia(sfu) {
     media: {
       audioRecv: false, videoRecv: false,
       audioSend: true, videoSend: true,
-      data: true },
+      data: true
+    },
     success: (jsep) => {
       sfu.send({
-        "message": {
-          "request": "configure",
-          "audio": true,
-          "video": true
+        message: {
+          request: "configure",
+          audio: true,
+          video: true
         },
-        "jsep": jsep
+        jsep: jsep
       });
     },
-    error: (error) => { console.log(error); }
+    error: (error) => {
+      console.log(error);
+    }
   });
 }
 
@@ -74,16 +77,21 @@ export class JanusWrapper {
   unmute() { this.sfu.unmuteAudio(); }
 
   constructor(opts) {
-    const { server, roomid, roompw, username, onStatus } = opts;
+    const { server, roomid, roompw, username, onStatus, onRemoteData,
+      onLocalConnection, onRemoteConnection, onRemoteDisconnect } = opts;
     this.opts = opts;
     this.server = server;
     this.roomid = roomid;
     this.roompw = roompw;
     this.username = username;
     this.onStatus = onStatus || Janus.noop;
+    this.onRemoteData = onRemoteData || Janus.noop;
+    this.onLocalConnection = onLocalConnection || Janus.noop;
+    this.onRemoteConnection = onRemoteConnection || Janus.noop;
+    this.onRemoteDisconnect = onRemoteDisconnect || Janus.noop;
     this.janus = null;
     this.sfu = null;
-    this.joined = null;
+    this.user = null;
     this.users = {};
     this.opaqueId = Janus.randomString(12);
 
@@ -116,20 +124,18 @@ export class JanusWrapper {
                 console.log(`local onmessage`);
                 console.log(msg);
                 if (msg.videoroom === "joined") {
-                  that.joined = msg;
+                  that.user = msg;
                   sendMedia(that.sfu);
                 } else if (msg.videoroom === "event" && msg.error_code === 433) {
                   that.onStatus("Incorrect room password!<br><br>Please refresh and try again :(");
                 }
                 for (let user of msg["publishers"] || []) that.addUser(user);
-                if (msg["unpublished"]) that.removeUser(msg["unpublished"]);
-                if (msg["leaving"]) hat.removeUser(msg["leaving"]);
+                if (msg.unpublished) that.removeUser(msg.unpublished);
+                if (msg.leaving) that.removeUser(msg.leaving);
                 if (jsep) that.sfu.handleRemoteJsep({ jsep });
               },
               onlocalstream: (stream) => {
-                if (that.opts.onLocalConnection) {
-                  that.opts.onLocalConnection(stream);
-                }
+                that.onLocalConnection(stream);
               }
             });
           }
@@ -139,8 +145,11 @@ export class JanusWrapper {
   }
 
   sendLocalData(data) {
-    if (this.sfu && this.joined) {
-      this.sfu.data({ "user": this.joined.id, "data": JSON.stringify(data) });
+    if (this.sfu && this.user) {
+      this.sfu.data({
+        user: this.user.id,
+        data: JSON.stringify(data)
+      });
     }
   }
 
@@ -156,14 +165,16 @@ export class JanusWrapper {
       success: (sfu) => {
         that.users[id].sfu = sfu;
         sfu.videoCodec = video_codec;
-        sfu.send({"message": {
-          "request": "join",
-          "room": that.roomid,
-          "pin": that.roompw,
-          "ptype": "subscriber",
-          "feed": id,
-          "private_id": that.joined.private_id
-        }});
+        sfu.send({
+          message: {
+            request: "join",
+            room: that.roomid,
+            pin: that.roompw,
+            ptype: "subscriber",
+            feed: id,
+            private_id: that.user.private_id
+          }
+        });
       },
       error: (error) => {
         console.log(`remote ${id} error`);
@@ -171,9 +182,7 @@ export class JanusWrapper {
       },
       ondata: (data) => {
         console.log(`remote ${id} ondata`);
-        if (that.opts.onRemoteData) {
-          that.opts.onRemoteData(user, JSON.parse(data));
-        }
+        that.onRemoteData(user, JSON.parse(data));
       },
       onmessage: (msg, jsep) => {
         console.log(`remote ${id} onmessage`);
@@ -181,17 +190,14 @@ export class JanusWrapper {
         if (jsep) {
           const remoteFeed = that.users[id].sfu;
           remoteFeed.createAnswer({
-              jsep: jsep,
-              media: { audioSend: false, videoSend: false, data: true },
-              success: (jsep) => {
-                Janus.debug("Got SDP!");
-                Janus.debug(jsep);
-                var message = { "request": "start", "room": that.roomid };
-                remoteFeed.send({message, jsep});
-              },
-              error: (error) => {
-                Janus.error("WebRTC error:", error);
-              }
+            jsep: jsep,
+            media: { audioSend: false, videoSend: false, data: true },
+            success: (jsep) => {
+              remoteFeed.send({
+                message: { request: "start", room: that.roomid },
+                jsep: jsep
+              });
+            }
           });
         }
       },
@@ -200,9 +206,7 @@ export class JanusWrapper {
         console.log(stream);
         if (!that.users[id].stream) {
           that.users[id].stream = stream;
-          if (that.opts.onRemoteConnection) {
-            that.opts.onRemoteConnection(user, stream);
-          }
+          that.onRemoteConnection(user, stream);
         }
       },
       oncleanup: () => {
@@ -214,13 +218,12 @@ export class JanusWrapper {
 
   removeUser(id) {
     const user = this.users[id];
-    const onDiscon = this.opts.onRemoteDisconnect;
     if (id == 'ok') {
       console.log(`removing ourselves`);
       this.sfu.hangup();
     } else if (user) {
       console.log(`removing user ${id}`);
-      if (onDiscon) onDiscon(user);
+      this.onRemoteDisconnect(user);
       if (user.sfu) user.sfu.detach();
       delete this.users[id];
     } else {
