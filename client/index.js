@@ -112,5 +112,5 @@ document.getElementById('start').onclick = () => {
     const position = JSON.parse(JSON.stringify(pos));
     const rotation = JSON.parse(JSON.stringify(rot));
     janus.sendLocalData({ position, rotation });
-  }, 250);
+  }, 100);
 };
