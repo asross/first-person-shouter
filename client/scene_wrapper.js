@@ -48,6 +48,42 @@ export class SceneWrapper {
     this.floor = new THREE.Mesh( floorGeometry, floorMaterial );
     this.scene.add(this.floor);
 
+
+    this.objects = [];
+    var boxGeometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
+    boxGeometry = boxGeometry.toNonIndexed(); // ensure each face has unique vertices
+    position = boxGeometry.attributes.position;
+    colors = [];
+
+    for ( var i = 0, l = position.count; i < l; i ++ ) {
+      color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+      colors.push( color.r, color.g, color.b );
+    }
+
+    boxGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
+
+    for ( var i = 0; i < 100; i ++ ) {
+
+        var boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: true } );
+        boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
+
+        var t = i/100;
+        var v = 0.5;
+        var omega = 9;
+        var x = (v)*Math.cos(omega*t);
+        var z = (v)*Math.sin(omega*t);
+        
+        var box = new THREE.Mesh( boxGeometry, boxMaterial );
+        box.position.x = ( x * 20 - 10 ) * 20;
+        box.position.y = ( 50*t ) * 20 + 10;
+        box.position.z = ( z * 20 - 10 ) * 20;
+
+        this.scene.add(box);
+        this.objects.push(box);
+
+      }
+
+
     //this.grid = new THREE.GridHelper(50, 50, 0x888888, 0x888888);
     //this.scene.add(this.grid);
 
@@ -59,11 +95,13 @@ export class SceneWrapper {
     function animate() {
       requestAnimationFrame(animate);
       if (that.controls) {
-				that.raycaster.ray.origin.copy(that.controls.getObject().position);
-        that.raycaster.ray.origin.y -= 10;
+				that.y_raycaster.ray.origin.copy(that.controls.getObject().position);
+        that.y_raycaster.ray.origin.y -= 15;
 
-        //var intersections = that.raycaster.intersectObjects( objects );
-        //var onObject = intersections.length > 0;
+        var onObject = that.y_raycaster.intersectObjects(that.objects).length > 0;
+
+        that.xz_raycaster.setFromCamera(that.mouse, that.camera);
+        var againstObject = that.xz_raycaster.intersectObjects(that.objects).length > 0;
 
         var time = performance.now();
         var delta = (time - that.prevTime) / 1000;
@@ -72,6 +110,7 @@ export class SceneWrapper {
         that.velocity.z -= that.velocity.z * 10.0 * delta;
 
         that.velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+        that.velocity.y = Math.max(-350 * 4, that.velocity.y);
 
         that.direction.z = Number( that.moveForward ) - Number( that.moveBackward );
         that.direction.x = Number( that.moveRight ) - Number( that.moveLeft );
@@ -80,10 +119,14 @@ export class SceneWrapper {
         if ( that.moveForward || that.moveBackward ) that.velocity.z -= that.direction.z * 400.0 * delta;
         if ( that.moveLeft || that.moveRight ) that.velocity.x -= that.direction.x * 400.0 * delta;
 
-        //if ( onObject === true ) {
-        //  that.velocity.y = Math.max( 0, that.velocity.y );
-        //  that.canJump = true;
-        //}
+        if ( againstObject === true ) {
+          that.velocity.x = 0;
+          that.velocity.z = 0;
+        }
+
+        if ( onObject === true ) {
+          that.velocity.y = Math.max( 0, that.velocity.y );
+        }
 
         that.controls.moveRight( - that.velocity.x * delta );
         that.controls.moveForward( - that.velocity.z * delta );
@@ -92,7 +135,6 @@ export class SceneWrapper {
         if ( that.controls.getObject().position.y < 10 ) {
           that.velocity.y = 0;
           that.controls.getObject().position.y = 10;
-          that.canJump = true;
         }
 
         that.prevTime = time;
@@ -139,13 +181,19 @@ export class SceneWrapper {
       that.showInstructions();
     });
 
-		this.raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0,-1,0), 0, 10);
+		this.y_raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0,-1,0), 0, 10);
+    this.xz_raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(), 0, 3);
+    this.mouse = new THREE.Vector2();
 
 		this.moveForward = false;
 		this.moveBackward = false;
 		this.moveLeft = false;
 		this.moveRight = false;
-		this.canJump = false;
+
+    function onMouseMove( event ) {
+      mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+      mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    }
 
     function onKeyDown(event) {
       switch (event.keyCode) {
@@ -166,8 +214,8 @@ export class SceneWrapper {
           that.moveRight = true;
           break;
         case 32: // space
-          if (that.canJump === true) that.velocity.y += 350;
-          that.canJump = false;
+          that.velocity.y += 350;
+          that.velocity.y = Math.min(that.velocity.y, 350);
           break;
       }
     }
@@ -202,7 +250,7 @@ export class SceneWrapper {
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
     window.addEventListener( 'resize', onWindowResize, false );
-    
+    window.addEventListener( 'mousemove', onMouseMove, false );
   }
 
   hideInstructions() {
